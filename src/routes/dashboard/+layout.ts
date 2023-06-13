@@ -1,16 +1,26 @@
 export const load = () => {
-    let pages = [{
-        meta: {
-            dir: 'pages', title: 'contacts', icon: 'Envelope'
+    let pages = [
+        {
+            meta: {
+                dir: 'pages', title: 'فرۆشتن', icon: 'Envelope'
+            },
+            path: '/dashboard/sale'
         },
-        path: 'contact'
-    },
-    {
-        meta: {
-            dir: 'pages', title: 'about', icon: 'Envelope'
+        {
+            meta: {
+                dir: 'pages', title: 'ڕاپۆرتی فرۆشتنی تاک', icon: 'Envelope'
+            },
+            path: '/dashboard/sales_report'
         },
-        path: 'about'
-    }]
+        {
+            meta: {
+                dir: 'pages', title: 'زیادکرندنی کاڵا', icon: 'Envelope'
+            },
+            path: '/dashboard/add_product'
+        },
+
+
+    ]
     return {
         pages,
     }
