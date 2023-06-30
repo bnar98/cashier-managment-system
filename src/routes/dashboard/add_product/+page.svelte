@@ -13,6 +13,7 @@
     import { DateInput } from "date-picker-svelte";
     import type { Stock } from "$lib/models/stock";
     import ExistingItemModal from "$lib/components/existingItemModal.svelte";
+    import { toasts, ToastContainer, FlatToast } from "svelte-toasts";
 
     type FormRules = {
         [key: string]: {
@@ -112,8 +113,9 @@
         console.log(data?.length);
         return !!data;
     }
+
     async function submitNewItem() {
-        const { data } = await supabase
+        const { error, data } = await supabase
             .from("item")
             .insert(itemData)
             .select("id");
@@ -122,6 +124,28 @@
         if (data) {
             formModal = true;
             newItemId = data[0].id;
+            toasts.add({
+                title: "سەرکەوتوو بوو",
+                description: "کاڵاکە بە سەرکەوتویی زیادکرا",
+                duration: 5000,
+                placement: "top-left",
+                type: "success",
+                showProgress: true,
+                onClick: () => {},
+                onRemove: () => {},
+            });
+        }
+        if (error) {
+            toasts.add({
+                title: "کێشەیەک ڕویدا",
+                description: error.message,
+                duration: 5000,
+                placement: "top-left",
+                type: "error",
+                showProgress: true,
+                onClick: () => {},
+                onRemove: () => {},
+            });
         }
         itemData = {
             barcode: "",
@@ -130,6 +154,7 @@
             unit_price: 0,
             wholesale_price: 0,
         };
+        submittedForm = false;
     }
     async function submitItemsToStock() {
         loading = true;
@@ -142,7 +167,30 @@
                 item_id: newItemId,
             })
             .select("id");
-
+        if (data) {
+            toasts.add({
+                title: "سەرکەوتوو بوو",
+                description: "کاڵاکە بە سەرکەوتویی بۆ مەخزەن زیادکرا",
+                duration: 5000,
+                placement: "top-left",
+                type: "success",
+                showProgress: true,
+                onClick: () => {},
+                onRemove: () => {},
+            });
+        }
+        if (error) {
+            toasts.add({
+                title: "کێشەیەک ڕویدا",
+                description: error.message,
+                duration: 5000,
+                placement: "top-left",
+                type: "error",
+                showProgress: true,
+                onClick: () => {},
+                onRemove: () => {},
+            });
+        }
         loading = false;
         formModal = false;
         stockData = {
@@ -153,6 +201,10 @@
     }
 </script>
 
+<ToastContainer placement="bottom-right" let:data>
+    <FlatToast {data} />
+    <!-- Provider template for your toasts -->
+</ToastContainer>
 <Modal
     bind:open={openExistingItemModal}
     size="md"

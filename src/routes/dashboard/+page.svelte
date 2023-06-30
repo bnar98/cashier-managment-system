@@ -1,5 +1,8 @@
 <script lang="ts">
     import type { PageData } from "./$types";
-
-    export let data: PageData;
+    import { goto } from "$app/navigation";
+    import { onMount } from "svelte";
+    onMount(() => {
+        goto("/dashboard/sale");
+    });
 </script>

@@ -14,7 +14,7 @@ export const load = () => {
         },
         {
             meta: {
-                dir: 'pages', title: 'ڕاپۆرتی فرۆشتنی تاک', icon: 'Envelope'
+                dir: 'pages', title: 'ڕاپۆرتی فرۆشتن', icon: 'Envelope'
             },
             path: '/dashboard/sales_report'
         },

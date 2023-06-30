@@ -19,8 +19,8 @@
     import { PaymentTypeEnum } from "$lib/models/paymentTypeEnum";
     import { SaleTypeEnum } from "$lib/models/saleTypeEnum";
     import { page } from "$app/stores";
-
-    console.log($page.params.sale_id);
+    import { toasts, ToastContainer, FlatToast } from "svelte-toasts";
+    import { dataset_dev } from "svelte/internal";
 
     interface InsertWholesaleData {
         item_id?: number;
@@ -46,9 +46,11 @@
     let popupModal = false;
     let showAutoComplete = false;
     let searchResult: any[] = [];
+    let searchBarcodeResult: any[] = [];
+    let showBarcodeAutoComplete = false;
     let totalPrice = 0;
     let loading = false;
-
+    let saleType: SaleTypeEnum = SaleTypeEnum.Single;
     $: {
         totalPrice = 0;
         for (let item of saleData) {
@@ -59,9 +61,10 @@
     async function getSaleDetail() {
         await supabase
             .from("sale_detail")
-            .select("*, item:item_id(*)")
+            .select("*, item:item_id(*),sale:sale_id(*)")
             .eq("sale_id", $page.params.sale_id)
             .then((response) => {
+                saleType = response.data![0]?.sale.sale_type;
                 for (let field of response.data!) {
                     saleData.push({
                         item_id: field.item_id,
@@ -70,11 +73,10 @@
                         item_name: field.item?.name,
                         item_barcode: field.item?.barcode,
                         total_purchase_price: field.item?.purchase_price!,
-                        purchase_price: field.purchase_price,
+                        purchase_price: field.item?.purchase_price!,
                         id: field.id,
                         unit_price: field.unit_price,
                     });
-                    console.log(saleData);
                     saleData = [...saleData];
                 }
             });
@@ -100,8 +102,18 @@
             .like("name", `%${e.target?.value}%`);
         searchResult = response.data as any[];
     }
+    async function searchItemByBarcode(e: any) {
+        loading = true;
+        console.log(e.target?.value);
+        showBarcodeAutoComplete = true;
+        const response = await supabase
+            .from("item")
+            .select("*")
+            .like("barcode", `%${e.target?.value}%`);
+        loading = false;
+        searchBarcodeResult = response.data as any[];
+    }
     function insertDataToSaleData(data: any) {
-        console.log(data);
         let index = saleData.findIndex((item) => item.item_id == data?.id);
         if (index == -1) {
             saleData.unshift({
@@ -158,12 +170,12 @@
             reportData.total_purchase_price += item.total_purchase_price;
         }
         reportData.total_item = saleData.length;
-        console.log(saleData);
-        await supabase
-            .rpc("update_sale_and_sale_detail", {
+        const { data, error } = await supabase.rpc(
+            "update_sale_and_sale_detail",
+            {
                 sale_data: {
                     payment_type: PaymentTypeEnum.Cash,
-                    sale_type: SaleTypeEnum.Single,
+                    sale_type: saleType,
                     quantity: reportData.quantity,
                     total_price: reportData.total_price,
                     total_purchase_price: reportData.total_purchase_price,
@@ -171,42 +183,43 @@
                     id: $page.params.sale_id,
                 },
                 sale_detail_data: saleData,
-            })
-            .then((res) => {
-                console.log(res);
-                if (res.error) return alert(res.error.message);
-                popupModal = true;
+            }
+        );
+        if (!error) {
+            toasts.add({
+                title: "سەرکەوتوو بوو",
+                description: "کاڵاکە بە سەرکەوتویی گۆڕدرا",
+                duration: 5000,
+                placement: "top-left",
+                type: "success",
+                showProgress: true,
+                onClick: () => {},
+                onRemove: () => {},
             });
+            saleData = [];
+
+            getSaleDetail();
+        }
+        if (error) {
+            toasts.add({
+                title: "کێشەیەک ڕویدا",
+                description: error.message,
+                duration: 5000,
+                placement: "top-left",
+                type: "error",
+                showProgress: true,
+                onClick: () => {},
+                onRemove: () => {},
+            });
+        }
+
         loading = false;
     }
 </script>
 
-<Modal bind:open={popupModal} size="sm" autoclose class="w-full">
-    <div class="text-center mt-10">
-        <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-            کاڵاکان بە سەرکەوتویی فرۆشرا
-        </h3>
-        <div class="my-5">
-            <Label class="space-y-2 py-5 ">
-                <NumberInput
-                    type="text"
-                    placeholder="بڕی پارەی دراو"
-                    class="w-72"
-                    bind:value={givePrice}
-                    autofocus
-                />
-            </Label>
-            <div class="w-full text-start">
-                <h1 class="text-lg">
-                    {`باقی  :  ${givePrice ? givePrice - totalPrice : ""}`}
-                </h1>
-            </div>
-        </div>
-        <div />
-        <Button color="red" class="mr-2">داخستن</Button>
-        <Button color="alternative">بڕۆ بەشی وردەکاری ئەم فرۆشتنە</Button>
-    </div>
-</Modal>
+<ToastContainer placement="bottom-right" let:data>
+    <FlatToast {data} />
+</ToastContainer>
 <div class="p-5 mt-12 w-full flex justify-between items-center">
     <h1 class="text-xl font-bold">لەم پەڕەیەدا فرۆشتن بە تاک داخڵ دەکەیت</h1>
 
@@ -219,7 +232,7 @@
         {/if}
         {saleData.length == 0
             ? "بۆ فرۆشتن پێویست ئەکات کاڵا داخڵ بکەیت"
-            : "فرۆشتن"}
+            : "گۆڕینی"}
     </Button>
 </div>
 <div class=" p-10 w-full">
@@ -238,16 +251,43 @@
         زیادکردن بە دەستی
     </h1>
     <div class="flex flex-wrap w-full">
-        <!-- <Label class="space-y-2 py-5">
+        <Label class="space-y-2 py-5">
             <span>باڕکۆد </span>
             <Input
                 type="text"
                 placeholder="باڕکۆد"
                 class="w-72"
                 bind:value={newItemData.barcode}
-
+                on:input={searchItemByBarcode}
+                on:blur={() => {
+                    setTimeout(() => {
+                        showBarcodeAutoComplete = false;
+                    }, 200);
+                }}
             />
-        </Label> -->
+            {#if searchBarcodeResult.length > 0 && showBarcodeAutoComplete}
+                <div
+                    class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-2"
+                >
+                    {#each searchBarcodeResult as item}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            class="font-medium py-2 px-4 text-md hover:bg-gray-300 dark:hover:bg-gray-600 w-full cursor-pointer"
+                            on:click={() => {
+                                newItemData.id = item.id;
+                                newItemData.barcode = item.barcode;
+                                newItemData.unit_price = item.unit_price;
+                                newItemData.name = item.name;
+                                newItemData.purchase_price =
+                                    item.purchase_price;
+                            }}
+                        >
+                            {item.name}
+                        </div>
+                    {/each}
+                </div>
+            {/if}
+        </Label>
         <Label class="space-y-2 pr-10 py-5">
             <span>سەرجەم</span>
             <NumberInput
@@ -278,7 +318,6 @@
                         <div
                             class="font-medium py-2 px-4 text-md hover:bg-gray-300 dark:hover:bg-gray-600 w-full cursor-pointer"
                             on:click={() => {
-                                console.log(item);
                                 newItemData.id = item.id;
                                 newItemData.barcode = item.barcode;
                                 newItemData.unit_price = item.unit_price;
@@ -339,7 +378,7 @@
                     <TableBodyCell>
                         <Trash
                             class="cursor-pointer hover:bg-gray-300 hover:dark:bg-gray-700 p-2 h-10 w-10 rounded-md text-primary-600"
-                            on:click={() => deleteItem(item.item_id)}
+                            on:click={() => deleteItem(item.item_id ?? 0)}
                         />
                     </TableBodyCell>
                 </TableBodyRow>

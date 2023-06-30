@@ -19,7 +19,6 @@
     import { PaymentTypeEnum } from "$lib/models/paymentTypeEnum";
     import { SaleTypeEnum } from "$lib/models/saleTypeEnum";
     import { goto } from "$app/navigation";
-    import DateInput from "date-picker-svelte/DateInput.svelte";
 
     export let data: PageData;
 

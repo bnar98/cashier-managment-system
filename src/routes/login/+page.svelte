@@ -61,7 +61,7 @@
             <Input
                 type="text"
                 id="email"
-                placeholder="example@example.com"
+                placeholder="ئیمەیڵ داخڵبکە"
                 name="email"
                 bind:value={loginData.email}
             />
@@ -79,13 +79,7 @@
         <Button type="submit" class="w-full mt-10">
             {#if loading}
                 <Spinner class="mr-3" size="4" />
-            {/if}Submit</Button
+            {/if}چونەژوورەوە</Button
         >
-
-        <p
-            class="text-sm mt-2 text-end cursor-pointer text-[#1e429f] hover:text-black"
-        >
-            Forgot Password?
-        </p>
     </div>
 </form>

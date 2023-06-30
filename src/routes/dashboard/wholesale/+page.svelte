@@ -39,6 +39,8 @@
         name: "",
         purchase_price: 0,
     };
+    let searchBarcodeResult: any[] = [];
+    let showBarcodeAutoComplete = false;
     let givePrice: undefined | number = undefined;
     let popupModal = false;
     let showAutoComplete = false;
@@ -72,6 +74,17 @@
             .select("*")
             .like("name", `%${e.target?.value}%`);
         searchResult = response.data as any[];
+    }
+    async function searchItemByBarcode(e: any) {
+        loading = true;
+        console.log(e.target?.value);
+        showBarcodeAutoComplete = true;
+        const response = await supabase
+            .from("item")
+            .select("*")
+            .like("barcode", `%${e.target?.value}%`);
+        loading = false;
+        searchBarcodeResult = response.data as any[];
     }
     function insertDataToSaleData(data: any) {
         let index = saleData.findIndex((item) => item.item_id == data?.id);
@@ -213,7 +226,36 @@
                 placeholder="باڕکۆد"
                 class="w-72"
                 bind:value={newItemData.barcode}
+                on:input={searchItemByBarcode}
+                on:blur={() => {
+                    setTimeout(() => {
+                        showBarcodeAutoComplete = false;
+                    }, 200);
+                }}
             />
+            {#if searchBarcodeResult.length > 0 && showBarcodeAutoComplete}
+                <div
+                    class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-2"
+                >
+                    {#each searchBarcodeResult as item}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            class="font-medium py-2 px-4 text-md hover:bg-gray-300 dark:hover:bg-gray-600 w-full cursor-pointer"
+                            on:click={() => {
+                                newItemData.id = item.id;
+                                newItemData.barcode = item.barcode;
+                                newItemData.wholesale_price =
+                                    item.wholesale_price;
+                                newItemData.name = item.name;
+                                newItemData.purchase_price =
+                                    item.purchase_price;
+                            }}
+                        >
+                            {item.name}
+                        </div>
+                    {/each}
+                </div>
+            {/if}
         </Label>
         <Label class="space-y-2 pr-10 py-5">
             <span>سەرجەم</span>
