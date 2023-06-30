@@ -5,5 +5,4 @@
     onMount(() => {
         goto("/dashboard/sale");
     });
-    //
 </script>
