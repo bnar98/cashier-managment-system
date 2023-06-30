@@ -28,14 +28,14 @@
         total_purchase_price: number;
         purchase_price: number;
         id?: number;
-        unit_price: number;
+        wholesale_price: number;
     }
     let saleData: InsertWholesaleData[] = [];
     let newItemData = {
         quantity: 1,
         barcode: "",
         id: 0,
-        unit_price: 0,
+        wholesale_price: 0,
         name: "",
         purchase_price: 0,
     };
@@ -79,8 +79,8 @@
             saleData.unshift({
                 item_id: data?.id,
                 quantity: newItemData?.quantity,
-                total_price: data?.unit_price * newItemData?.quantity,
-                unit_price: data?.unit_price,
+                total_price: data?.wholesale_price * newItemData?.quantity,
+                wholesale_price: data?.wholesale_price,
                 item_name: data?.name,
                 item_barcode: data?.barcode,
                 total_purchase_price:
@@ -91,7 +91,7 @@
         } else {
             saleData[index].quantity += +newItemData.quantity;
             saleData[index].total_price =
-                saleData[index].quantity * saleData[index].unit_price!;
+                saleData[index].quantity * saleData[index].wholesale_price!;
             if (saleData[index].total_purchase_price) {
                 saleData[index].total_purchase_price =
                     saleData[index].quantity * saleData[index].purchase_price!;
@@ -102,7 +102,7 @@
             quantity: 1,
             barcode: "",
             id: 0,
-            unit_price: 0,
+            wholesale_price: 0,
             name: "",
             purchase_price: 0,
         };
@@ -134,7 +134,7 @@
             .rpc("insert_sale_and_sale_detail", {
                 sale_data: {
                     payment_type: PaymentTypeEnum.Cash,
-                    sale_type: SaleTypeEnum.Single,
+                    sale_type: SaleTypeEnum.Wholesale,
                     quantity: reportData.quantity,
                     total_price: reportData.total_price,
                     total_purchase_price: reportData.total_purchase_price,
@@ -176,7 +176,7 @@
     </div>
 </Modal>
 <div class="p-5 mt-12 w-full flex justify-between items-center">
-    <h1 class="text-xl font-bold">لەم پەڕەیەدا فرۆشتن بە تاک داخڵ دەکەیت</h1>
+    <h1 class="text-xl font-bold">لەم پەڕەیەدا فرۆشتن بە جوملە داخڵ دەکەیت</h1>
 
     <Button
         on:click={addNewSale}
@@ -248,7 +248,8 @@
                                 console.log(item);
                                 newItemData.id = item.id;
                                 newItemData.barcode = item.barcode;
-                                newItemData.unit_price = item.unit_price;
+                                newItemData.wholesale_price =
+                                    item.wholesale_price;
                                 newItemData.name = item.name;
                                 newItemData.purchase_price =
                                     item.purchase_price;
@@ -294,7 +295,7 @@
                             on:input={() => {
                                 console.log(item);
                                 item.total_price =
-                                    item.quantity * item.unit_price;
+                                    item.quantity * item.wholesale_price;
                                 item.total_purchase_price =
                                     item.quantity * item.purchase_price;
                                 saleData = [...saleData];

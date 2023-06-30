@@ -21,5 +21,11 @@ export interface saleReport {
     id?: number,
     payment_type: PaymentTypeEnum,
     sale_type: SaleTypeEnum,
+    total_purchase_price: number,
+    total_price: number,
+    total_item: number,
+    quantity: number,
+    created_at: string,
     sale_detail: saleDetail[],
 }
+

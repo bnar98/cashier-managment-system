@@ -2,9 +2,15 @@ export const load = () => {
     let pages = [
         {
             meta: {
-                dir: 'pages', title: 'فرۆشتن', icon: 'Envelope'
+                dir: 'pages', title: 'فرۆشتن بە تاک', icon: 'Envelope'
             },
             path: '/dashboard/sale'
+        },
+        {
+            meta: {
+                dir: 'pages', title: 'فرۆشتنی جملە', icon: 'Envelope'
+            },
+            path: '/dashboard/wholesale'
         },
         {
             meta: {

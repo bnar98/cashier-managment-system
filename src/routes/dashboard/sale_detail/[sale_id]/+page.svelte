@@ -18,6 +18,9 @@
     import { Trash } from "svelte-heros-v2";
     import { PaymentTypeEnum } from "$lib/models/paymentTypeEnum";
     import { SaleTypeEnum } from "$lib/models/saleTypeEnum";
+    import { page } from "$app/stores";
+
+    console.log($page.params.sale_id);
 
     interface InsertWholesaleData {
         item_id?: number;
@@ -51,6 +54,30 @@
         for (let item of saleData) {
             totalPrice += item.total_price;
         }
+    }
+    getSaleDetail();
+    async function getSaleDetail() {
+        await supabase
+            .from("sale_detail")
+            .select("*, item:item_id(*)")
+            .eq("sale_id", $page.params.sale_id)
+            .then((response) => {
+                for (let field of response.data!) {
+                    saleData.push({
+                        item_id: field.item_id,
+                        quantity: field.quantity,
+                        total_price: field.total_price,
+                        item_name: field.item?.name,
+                        item_barcode: field.item?.barcode,
+                        total_purchase_price: field.item?.purchase_price!,
+                        purchase_price: field.purchase_price,
+                        id: field.id,
+                        unit_price: field.unit_price,
+                    });
+                    console.log(saleData);
+                    saleData = [...saleData];
+                }
+            });
     }
     async function addRowByBarcode() {
         loading = true;

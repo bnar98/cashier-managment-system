@@ -1,20 +1,44 @@
 <script lang="ts">
     import {
         Label,
-        Checkbox,
-        A,
         Button,
         Input,
         Spinner,
         Modal,
+        Helper,
     } from "flowbite-svelte";
     import type { PageData } from "./$types";
     import type { Item } from "$lib/models/item";
     import { supabase } from "$lib/supabase";
     import { DateInput } from "date-picker-svelte";
     import type { Stock } from "$lib/models/stock";
+    import ExistingItemModal from "$lib/components/existingItemModal.svelte";
 
-    export let data: PageData;
+    type FormRules = {
+        [key: string]: {
+            required: boolean;
+            message: string;
+        };
+    };
+    let formRules: FormRules = {
+        name: {
+            required: true,
+            message: "ناوی كاڵا پێویستە",
+        },
+        purchase_price: {
+            required: true,
+            message: "نرخی کڕین پێویستە",
+        },
+        unit_price: {
+            required: true,
+            message: "نرخی تاك پێویستە",
+        },
+        wholesale_price: {
+            required: true,
+            message: "نرخی جملە پێویستە",
+        },
+    };
+    let submittedForm = false;
     let loading = false;
     let itemData: Item = {
         barcode: "",
@@ -30,10 +54,66 @@
         purchase_date: new Date(),
         quantity: 0,
     };
+    let existingData: Item | undefined = undefined;
+    let openExistingItemModal = false;
+    let existingField = "";
     async function addNewItem() {
         loading = true;
-        console.log("addedd");
+        submittedForm = true;
+        for (let field in formRules) {
+            if (formRules[field].required && !itemData[field as keyof Item]) {
+                console.log("error");
+                loading = false;
+                return;
+            }
+        }
+        checkIfBarcodeExists().then((exist) => {
+            if (exist) {
+                openExistingItemModal = true;
+                existingField = "barcode";
+                return;
+            } else {
+                checkIfNameExists().then((exist) => {
+                    console.log(exist);
+                    if (exist) {
+                        openExistingItemModal = true;
+                        existingField = "name";
+                        return;
+                    } else {
+                        submitNewItem();
+                    }
+                });
+            }
+        });
+    }
+    async function checkIfBarcodeExists() {
         const { data, error } = await supabase
+            .from("item")
+            .select("*")
+            .eq("barcode", itemData.barcode)
+            .single();
+        if (data) {
+            existingData = data as Item;
+        }
+
+        console.log(data?.length);
+        return !!data;
+    }
+    async function checkIfNameExists() {
+        const { data, error } = await supabase
+            .from("item")
+            .select("*")
+            .eq("name", itemData.name)
+            .single();
+        if (data) {
+            existingData = data as Item;
+        }
+
+        console.log(data?.length);
+        return !!data;
+    }
+    async function submitNewItem() {
+        const { data } = await supabase
             .from("item")
             .insert(itemData)
             .select("id");
@@ -73,6 +153,14 @@
     }
 </script>
 
+<Modal
+    bind:open={openExistingItemModal}
+    size="md"
+    autoclose={false}
+    class="w-full"
+>
+    <ExistingItemModal data={existingData} {existingField} />
+</Modal>
 <Modal bind:open={formModal} size="xs" autoclose={false} class="w-full">
     <form
         class="flex flex-col space-y-6"
@@ -123,16 +211,22 @@
                     <Input
                         type="text"
                         placeholder="ناوی كالا داخڵ بکە"
-                        required
+                        color={submittedForm && !itemData.name ? "red" : "base"}
                         bind:value={itemData.name}
                     />
+                    {#if submittedForm && !itemData.name}
+                        <Helper class="mt-2" color="red"
+                            ><span class="font-medium"
+                                >ناوی کاڵا پڕکردنەوەی پێویستە</span
+                            ></Helper
+                        >
+                    {/if}
                 </div>
                 <div>
                     <Label for="last_name" class="mb-2">باڕکۆد</Label>
                     <Input
                         type="text"
                         placeholder="باڕکۆدی کاڵا داخل بکە"
-                        required
                         bind:value={itemData.barcode}
                     />
                 </div>
@@ -141,27 +235,54 @@
                     <Input
                         type="number"
                         placeholder="0.000"
-                        required
                         bind:value={itemData.purchase_price}
+                        color={submittedForm && !itemData.purchase_price
+                            ? "red"
+                            : "base"}
                     />
+                    {#if submittedForm && !itemData.purchase_price}
+                        <Helper class="mt-2" color="red"
+                            ><span class="font-medium"
+                                >نرخی کڕین پڕکردنەوەی پێویستە</span
+                            ></Helper
+                        >
+                    {/if}
                 </div>
                 <div>
                     <Label for="phone" class="mb-2">نرخی تاک</Label>
                     <Input
                         type="number"
                         placeholder="0.000"
-                        required
                         bind:value={itemData.unit_price}
+                        color={submittedForm && !itemData.unit_price
+                            ? "red"
+                            : "base"}
                     />
+                    {#if submittedForm && !itemData.unit_price}
+                        <Helper class="mt-2" color="red"
+                            ><span class="font-medium">
+                                نرخی تاک پڕکردنەوەی پێویستە</span
+                            ></Helper
+                        >
+                    {/if}
                 </div>
                 <div>
                     <Label class="mb-2">نرخی جملە</Label>
                     <Input
                         type="number"
                         placeholder="0.000"
-                        required
                         bind:value={itemData.wholesale_price}
+                        color={submittedForm && !itemData.wholesale_price
+                            ? "red"
+                            : "base"}
                     />
+                    {#if submittedForm && !itemData.wholesale_price}
+                        <Helper class="mt-2" color="red"
+                            ><span class="font-medium">
+                                نرخی جملە پڕکردنەوەی پێویستە</span
+                            ></Helper
+                        >
+                    {/if}
                 </div>
             </div>
             <div class="flex w-full justify-end">
