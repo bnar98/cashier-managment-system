@@ -20,10 +20,11 @@
     import { SaleTypeEnum } from "$lib/models/saleTypeEnum";
     import { goto } from "$app/navigation";
     import DateInput from "date-picker-svelte/DateInput.svelte";
+    import type { Item } from "$lib/models/item";
 
     export let data: PageData;
 
-    let saleData: saleReport[] = [];
+    let itemData: Item[] = [];
     let amountData = {
         totalPrice: 0,
         quantity: 0,
@@ -39,18 +40,10 @@
     getSales();
     async function getSales() {
         await supabase
-            .from("sale")
-            .select("*,sale_detail(*)")
-            .gte("created_at", filterData.startDate)
-            .lte("created_at", filterData.endDate)
+            .from("item")
+            .select("*,stock(*)")
             .then((response) => {
-                saleData = response.data as saleReport[];
-                saleData?.forEach((item) => {
-                    amountData.totalPrice += item.total_price;
-                    amountData.quantity += item.quantity;
-                    amountData.totalItem += item.total_item;
-                    amountData.totalPurchasePrice += item.total_purchase_price;
-                });
+                itemData = response.data as Item[];
             });
     }
 </script>
@@ -83,36 +76,30 @@
             <Button on:click={getSales}>گەڕان</Button>
         </div>
     </div>
-    <Card data={amountData} />
     <Table divClass="w-full mt-10 text-right">
         <TableHead>
-            <TableHeadCell>جۆری فرۆشتن</TableHeadCell>
-            <TableHeadCell>بەروار</TableHeadCell>
-            <TableHeadCell>سەرجەمی نرخی فرۆشتن</TableHeadCell>
-            <TableHeadCell>سەرجەمی نرخی کڕین</TableHeadCell>
-            <TableHeadCell>سەرجەمی کاڵاکان</TableHeadCell>
+            <TableHeadCell>ناوی کاڵا</TableHeadCell>
+            <TableHeadCell>بارکۆدی کاڵا</TableHeadCell>
+            <TableHeadCell>نرخی فرۆشتنی تاک</TableHeadCell>
+            <TableHeadCell>نرخی کڕین</TableHeadCell>
+            <TableHeadCell>نرخی فرۆشتنی کۆ</TableHeadCell>
             <TableHeadCell />
         </TableHead>
         <TableBody>
-            {#each saleData as item}
+            {#each itemData as item}
                 <TableBodyRow>
-                    <TableBodyCell
-                        >{item.sale_type == SaleTypeEnum.Single
-                            ? "تاک"
-                            : "کۆ"}</TableBodyCell
-                    >
-                    <TableBodyCell
-                        >{item.created_at?.split("T")[0]}</TableBodyCell
-                    >
+                    <TableBodyCell>{item.name}</TableBodyCell>
+                    <TableBodyCell>{item.barcode}</TableBodyCell>
 
-                    <TableBodyCell>{item.total_price}</TableBodyCell>
-                    <TableBodyCell>{item.total_purchase_price}</TableBodyCell>
-                    <TableBodyCell>{item.total_item}</TableBodyCell>
+                    <TableBodyCell>{item.unit_price}</TableBodyCell>
+                    <TableBodyCell>{item.purchase_price}</TableBodyCell>
+                    <TableBodyCell>{item.wholesale_price}</TableBodyCell>
                     <TableBodyCell>
                         <InformationCircle
                             class="cursor-pointer hover:bg-gray-300 hover:dark:bg-gray-700 p-2 h-10 w-10 rounded-md "
                             on:click={() => {
-                                goto(`/dashboard/sale_detail/${item.id}`);
+                                console.log(item);
+                                goto(`/dashboard/items/${item.id}`);
                             }}
                         />
                     </TableBodyCell>

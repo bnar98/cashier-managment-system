@@ -24,6 +24,12 @@ export const load = () => {
             },
             path: '/dashboard/add_product'
         },
+        {
+            meta: {
+                dir: 'pages', title: 'لیستی کاڵاکان', icon: 'Envelope'
+            },
+            path: '/dashboard/items'
+        },
 
 
     ]

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Button, Helper, Input, Label, Modal } from "flowbite-svelte";
     import type { Item } from "$lib/models/item";
+    import { goto } from "$app/navigation";
 
     export let data: Item | undefined;
     export let existingField: string;
@@ -92,6 +93,11 @@
         </h1>
     </div>
     <div class="flex justify-end">
-        <Button class="btn btn-secondary">بڕۆ بەشی وردەکاری كاڵا</Button>
+        <Button
+            class="btn btn-secondary"
+            on:click={() => {
+                goto(`/dashboard/items/${data?.id}`);
+            }}>بڕۆ بەشی وردەکاری كاڵا</Button
+        >
     </div>
 </div>

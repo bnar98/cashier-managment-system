@@ -101,6 +101,7 @@
         searchResult = response.data as any[];
     }
     function insertDataToSaleData(data: any) {
+        console.log(data);
         let index = saleData.findIndex((item) => item.item_id == data?.id);
         if (index == -1) {
             saleData.unshift({
@@ -157,8 +158,9 @@
             reportData.total_purchase_price += item.total_purchase_price;
         }
         reportData.total_item = saleData.length;
+        console.log(saleData);
         await supabase
-            .rpc("insert_sale_and_sale_detail", {
+            .rpc("update_sale_and_sale_detail", {
                 sale_data: {
                     payment_type: PaymentTypeEnum.Cash,
                     sale_type: SaleTypeEnum.Single,
@@ -166,10 +168,13 @@
                     total_price: reportData.total_price,
                     total_purchase_price: reportData.total_purchase_price,
                     total_item: reportData.total_item,
+                    id: $page.params.sale_id,
                 },
                 sale_detail_data: saleData,
             })
             .then((res) => {
+                console.log(res);
+                if (res.error) return alert(res.error.message);
                 popupModal = true;
             });
         loading = false;
@@ -233,15 +238,16 @@
         زیادکردن بە دەستی
     </h1>
     <div class="flex flex-wrap w-full">
-        <Label class="space-y-2 py-5">
+        <!-- <Label class="space-y-2 py-5">
             <span>باڕکۆد </span>
             <Input
                 type="text"
                 placeholder="باڕکۆد"
                 class="w-72"
                 bind:value={newItemData.barcode}
+
             />
-        </Label>
+        </Label> -->
         <Label class="space-y-2 pr-10 py-5">
             <span>سەرجەم</span>
             <NumberInput
@@ -333,7 +339,7 @@
                     <TableBodyCell>
                         <Trash
                             class="cursor-pointer hover:bg-gray-300 hover:dark:bg-gray-700 p-2 h-10 w-10 rounded-md text-primary-600"
-                            on:click={() => deleteItem(item.id ?? 0)}
+                            on:click={() => deleteItem(item.item_id)}
                         />
                     </TableBodyCell>
                 </TableBodyRow>
