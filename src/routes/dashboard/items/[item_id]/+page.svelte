@@ -52,6 +52,17 @@
     };
     async function submitItemsToStock() {
         loading = true;
+        let quantity = 0;
+        for (let itemInStock of stock) {
+            quantity += itemInStock.quantity;
+        }
+        await supabase
+            .from("item")
+            .update({
+                quantity: quantity + stockData.quantity,
+            })
+            .eq("id", $page.params.item_id);
+
         const { data, error } = await supabase
             .from("stock")
             .insert({

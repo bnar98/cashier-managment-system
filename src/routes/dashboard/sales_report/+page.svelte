@@ -2,6 +2,8 @@
     import Card from "$lib/components/card.svelte";
     import {
         Button,
+        Checkbox,
+        Dropdown,
         Input,
         Label,
         Table,
@@ -22,6 +24,7 @@
 
     export let data: PageData;
 
+    let saleTypeFilter = "";
     let saleData: saleReport[] = [];
     let amountData = {
         totalPrice: 0,
@@ -41,6 +44,7 @@
             .from("sale")
             .select("*,sale_detail(*)")
             .gte("created_at", filterData.startDate)
+            .eq(saleTypeFilter ? "sale_type" : "", saleTypeFilter)
             .lte("created_at", filterData.endDate)
             .then((response) => {
                 saleData = response.data as saleReport[];
@@ -51,6 +55,13 @@
                     amountData.totalPurchasePrice += item.total_purchase_price;
                 });
             });
+    }
+    function updateSaleType(saleType: SaleTypeEnum) {
+        if (saleTypeFilter == saleType) {
+            saleTypeFilter = "";
+            return;
+        }
+        saleTypeFilter = saleType;
     }
 </script>
 
@@ -76,6 +87,29 @@
                     name="birthday"
                     bind:value={filterData.endDate}
                 />
+            </Label>
+        </div>
+        <div class="flex items-end">
+            <Label class="space-y-2">
+                <Button>جۆری فرۆشتن</Button>
+                <Dropdown class="w-44 p-3 space-y-3 text-sm">
+                    <li>
+                        <Checkbox
+                            class="mx-2"
+                            on:change={() =>
+                                updateSaleType(SaleTypeEnum.Single)}
+                            checked={saleTypeFilter == SaleTypeEnum.Single}
+                        />تاک
+                    </li>
+                    <li>
+                        <Checkbox
+                            class="mx-2"
+                            on:change={() =>
+                                updateSaleType(SaleTypeEnum.Wholesale)}
+                            checked={saleTypeFilter == SaleTypeEnum.Wholesale}
+                        />کۆ
+                    </li>
+                </Dropdown>
             </Label>
         </div>
         <div class="w-full flex justify-end items-center col-span-8">

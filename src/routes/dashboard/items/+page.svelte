@@ -36,12 +36,14 @@
     let filterData = {
         startDate: moment(new Date()).format("YYYY-MM-DD"),
         endDate: moment(tomorrow).format("YYYY-MM-DD"),
+        barcode: "",
     };
     getSales();
     async function getSales() {
         await supabase
             .from("item")
             .select("*,stock(*)")
+            .like("barcode", `%${filterData.barcode}%`)
             .then((response) => {
                 itemData = response.data as Item[];
             });
@@ -49,29 +51,45 @@
 </script>
 
 <div class="p-10">
-    <div class="grid grid-cols-4 py-10 bg-white my-4 px-4 gap-2">
-        <div class="">
+    <div class=" py-10 bg-white my-4 px-4">
+        <div class="w-[300px]">
             <Label class="space-y-2">
-                <span>بەرواری سەرەتا</span>
-                <input
-                    type="date"
+                <Input
                     id="birthday"
                     name="birthday"
-                    bind:value={filterData.startDate}
+                    placeholder="باڕکۆد"
+                    bind:value={filterData.barcode}
+                    on:change={() => {
+                        getSales();
+                    }}
                 />
             </Label>
         </div>
-        <div class="">
-            <Label class="space-y-2">
-                <span>بەرواری کۆتا</span>
-                <input
-                    type="date"
-                    id="birthday"
-                    name="birthday"
-                    bind:value={filterData.endDate}
-                />
-            </Label>
-        </div>
+        <!-- <div class="grid grid-cols-4 py-10 bg-white my-4 px-4 gap-2">
+            <div class="">
+                <Label class="space-y-2">
+                    <span>بەرواری سەرەتا</span>
+                    <input
+                        type="date"
+                        id="birthday"
+                        name="birthday"
+                        bind:value={filterData.startDate}
+                    />
+                </Label>
+            </div>
+            <div class="">
+                <Label class="space-y-2">
+                    <span>بەرواری کۆتا</span>
+                    <input
+                        type="date"
+                        id="birthday"
+                        name="birthday"
+                        bind:value={filterData.endDate}
+                    />
+                </Label>
+            </div>
+        </div> -->
+
         <div class="w-full flex justify-end items-center col-span-8">
             <Button on:click={getSales}>گەڕان</Button>
         </div>

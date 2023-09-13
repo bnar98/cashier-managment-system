@@ -158,6 +158,12 @@
     }
     async function submitItemsToStock() {
         loading = true;
+        await supabase
+            .from("item")
+            .update({
+                quantity: stockData.quantity,
+            })
+            .eq("id", newItemId);
         const { data, error } = await supabase
             .from("stock")
             .insert({
