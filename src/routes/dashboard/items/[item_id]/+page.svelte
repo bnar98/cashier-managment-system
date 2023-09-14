@@ -12,7 +12,6 @@
         TableBody,
         TableBodyRow,
         TableBodyCell,
-        InformationCircle,
         Button,
         Modal,
         Label,
@@ -92,6 +91,7 @@
                 purchase_price: itemData.purchase_price,
                 unit_price: itemData.unit_price,
                 wholesale_price: itemData.wholesale_price,
+                quantity: itemData.quantity,
             })
             .eq("id", $page.params.item_id);
 
@@ -188,6 +188,12 @@
         <Label class="space-y-2">
             <span>نرخی فرۆشتنی کۆ</span>
             <Input type="number" bind:value={itemData.wholesale_price} />
+        </Label>
+    </div>
+    <div>
+        <Label class="space-y-2">
+            <span>عدد</span>
+            <Input type="number" bind:value={itemData.quantity} />
         </Label>
     </div>
 </div>

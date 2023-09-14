@@ -4,7 +4,6 @@
         Button,
         Checkbox,
         Dropdown,
-        Input,
         Label,
         Table,
         TableBody,
@@ -16,9 +15,8 @@
     import type { PageData } from "./$types";
     import { supabase } from "$lib/supabase";
     import type { saleReport } from "$lib/models/sale";
-    import { Trash, InformationCircle } from "svelte-heros-v2";
+    import { InformationCircle } from "svelte-heros-v2";
     import moment from "moment";
-    import { PaymentTypeEnum } from "$lib/models/paymentTypeEnum";
     import { SaleTypeEnum } from "$lib/models/saleTypeEnum";
     import { goto } from "$app/navigation";
 
@@ -40,6 +38,12 @@
     };
     getSales();
     async function getSales() {
+        amountData = {
+            totalPrice: 0,
+            quantity: 0,
+            totalItem: 0,
+            totalPurchasePrice: 0,
+        };
         await supabase
             .from("sale")
             .select("*,sale_detail(*)")

@@ -146,22 +146,26 @@
             reportData.total_purchase_price += item.total_purchase_price;
         }
         reportData.total_item = saleData.length;
-        console.log(saleData);
-        // await supabase
-        //     .rpc("insert_sale_and_sale_detail", {
-        //         sale_data: {
-        //             payment_type: PaymentTypeEnum.Cash,
-        //             sale_type: SaleTypeEnum.Single,
-        //             quantity: reportData.quantity,
-        //             total_price: reportData.total_price,
-        //             total_purchase_price: reportData.total_purchase_price,
-        //             total_item: reportData.total_item,
-        //         },
-        //         sale_detail_data: saleData,
-        //     })
-        //     .then((res) => {
-        //         popupModal = true;
-        //     });
+        await supabase
+            .rpc("insert_sale_and_sale_detail", {
+                sale_data: {
+                    payment_type: PaymentTypeEnum.Cash,
+                    sale_type: SaleTypeEnum.Single,
+                    quantity: reportData.quantity,
+                    total_price: reportData.total_price,
+                    total_purchase_price: reportData.total_purchase_price,
+                    total_item: reportData.total_item,
+                },
+                sale_detail_data: saleData,
+            })
+            .then((res) => {
+                if (res.error) {
+                    alert("هەڵەیەک ڕویدا");
+                    return;
+                }
+                saleData = [];
+                popupModal = true;
+            });
         loading = false;
     }
 </script>

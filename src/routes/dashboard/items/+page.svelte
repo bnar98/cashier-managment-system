@@ -26,7 +26,8 @@
 
     let itemData: Item[] = [];
     let amountData = {
-        totalPrice: 0,
+        totalSinglePrice: 0,
+        totalWholesalePrice: 0,
         quantity: 0,
         totalItem: 0,
         totalPurchasePrice: 0,
@@ -40,13 +41,38 @@
     };
     getSales();
     async function getSales() {
+        amountData = {
+            totalSinglePrice: 0,
+            totalWholesalePrice: 0,
+            quantity: 0,
+            totalItem: 0,
+            totalPurchasePrice: 0,
+        };
         await supabase
             .from("item")
             .select("*,stock(*)")
             .like("barcode", `%${filterData.barcode}%`)
             .then((response) => {
+                response.data?.map((item) => {
+                    amountData.totalPurchasePrice +=
+                        item.quantity * item.purchase_price;
+                    amountData.totalSinglePrice +=
+                        item.quantity * item.unit_price;
+                    amountData.totalWholesalePrice +=
+                        item.quantity * item.wholesale_price;
+                    amountData.quantity += item.quantity;
+                });
                 itemData = response.data as Item[];
             });
+    }
+    async function updateQuantity(id: number) {
+        await supabase
+            .from("item")
+            .update({
+                quantity: itemData.find((item) => item.id == id)?.quantity,
+            })
+            .eq("id", id);
+        getSales();
     }
 </script>
 
@@ -65,34 +91,30 @@
                 />
             </Label>
         </div>
-        <!-- <div class="grid grid-cols-4 py-10 bg-white my-4 px-4 gap-2">
-            <div class="">
-                <Label class="space-y-2">
-                    <span>بەرواری سەرەتا</span>
-                    <input
-                        type="date"
-                        id="birthday"
-                        name="birthday"
-                        bind:value={filterData.startDate}
-                    />
-                </Label>
-            </div>
-            <div class="">
-                <Label class="space-y-2">
-                    <span>بەرواری کۆتا</span>
-                    <input
-                        type="date"
-                        id="birthday"
-                        name="birthday"
-                        bind:value={filterData.endDate}
-                    />
-                </Label>
-            </div>
-        </div> -->
 
         <div class="w-full flex justify-end items-center col-span-8">
             <Button on:click={getSales}>گەڕان</Button>
         </div>
+        <h1>
+            کۆی گشتی نرخی کڕینی هەموكاڵاکان : <span
+                >{amountData.totalPurchasePrice.toLocaleString()}</span
+            >
+        </h1>
+        <h1>
+            کۆی گشتی نرخی فرۆشتنی هەموكاڵاکان بە تاک : <span
+                >{amountData.totalSinglePrice.toLocaleString()}</span
+            >
+        </h1>
+        <h1>
+            کۆی گشتی نرخی فرۆشتنی هەموكاڵاکان بە کۆ : <span
+                >{amountData.totalWholesalePrice.toLocaleString()}</span
+            >
+        </h1>
+        <h1>
+            عددی هەموو کاڵاکان: <span
+                >{amountData.quantity.toLocaleString()}</span
+            >
+        </h1>
     </div>
     <Table divClass="w-full mt-10 text-right">
         <TableHead>
@@ -101,6 +123,7 @@
             <TableHeadCell>نرخی فرۆشتنی تاک</TableHeadCell>
             <TableHeadCell>نرخی کڕین</TableHeadCell>
             <TableHeadCell>نرخی فرۆشتنی کۆ</TableHeadCell>
+            <TableHeadCell>عدد</TableHeadCell>
             <TableHeadCell />
         </TableHead>
         <TableBody>
@@ -113,13 +136,21 @@
                     <TableBodyCell>{item.purchase_price}</TableBodyCell>
                     <TableBodyCell>{item.wholesale_price}</TableBodyCell>
                     <TableBodyCell>
-                        <InformationCircle
-                            class="cursor-pointer hover:bg-gray-300 hover:dark:bg-gray-700 p-2 h-10 w-10 rounded-md "
-                            on:click={() => {
-                                console.log(item);
-                                goto(`/dashboard/items/${item.id}`);
-                            }}
-                        />
+                        <Input bind:value={item.quantity} />
+                    </TableBodyCell>
+                    <TableBodyCell>
+                        <div class="flex items-center justify-between">
+                            <InformationCircle
+                                class="cursor-pointer hover:bg-gray-300 hover:dark:bg-gray-700 p-2 h-10 w-10 rounded-md "
+                                on:click={() => {
+                                    console.log(item);
+                                    goto(`/dashboard/items/${item.id}`);
+                                }}
+                            />
+                            <Button on:click={() => updateQuantity(item.id)}
+                                >گۆڕینی عدد</Button
+                            >
+                        </div>
                     </TableBodyCell>
                 </TableBodyRow>
             {/each}

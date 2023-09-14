@@ -1,3 +1,5 @@
+import type { Stock } from "./stock";
+
 export interface Item {
     id?: number,
     name: string,
@@ -6,4 +8,5 @@ export interface Item {
     unit_price?: number,
     wholesale_price?: number,
     quantity?: number,
+    stock?: Stock[]
 }

@@ -156,11 +156,11 @@
                 sale_detail_data: saleData,
             })
             .then((res) => {
-                console.log(res);
                 if (res.error) {
                     alert("هەڵەیەک ڕویدا");
                     return;
                 }
+                saleData = [];
                 popupModal = true;
             });
         loading = false;
