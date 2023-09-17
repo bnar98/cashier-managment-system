@@ -2,6 +2,7 @@
     import Card from "$lib/components/card.svelte";
     import {
         Button,
+        ButtonGroup,
         Input,
         Label,
         Table,
@@ -21,15 +22,18 @@
     import { goto } from "$app/navigation";
     import DateInput from "date-picker-svelte/DateInput.svelte";
     import type { Item } from "$lib/models/item";
+    import { ChevronLeft, ChevronRight } from "svelte-heros-v2";
+    import { onMount } from "svelte";
 
     export let data: PageData;
 
+    let page = 1;
+    let totalItems = 0;
     let itemData: Item[] = [];
     let amountData = {
         totalSinglePrice: 0,
         totalWholesalePrice: 0,
         quantity: 0,
-        totalItem: 0,
         totalPurchasePrice: 0,
     };
     var tomorrow = new Date();
@@ -39,39 +43,64 @@
         endDate: moment(tomorrow).format("YYYY-MM-DD"),
         barcode: "",
     };
-    getSales();
+    onMount(async () => {
+        await getSales();
+        await calculateTotalAmount();
+    });
     async function getSales() {
-        amountData = {
-            totalSinglePrice: 0,
-            totalWholesalePrice: 0,
-            quantity: 0,
-            totalItem: 0,
-            totalPurchasePrice: 0,
-        };
         await supabase
             .from("item")
             .select("*,stock(*)")
             .like("barcode", `%${filterData.barcode}%`)
+            .range((page - 1) * 8, page * 8 - 1)
             .then((response) => {
-                response.data?.map((item) => {
-                    amountData.totalPurchasePrice +=
-                        item.quantity * item.purchase_price;
-                    amountData.totalSinglePrice +=
-                        item.quantity * item.unit_price;
-                    amountData.totalWholesalePrice +=
-                        item.quantity * item.wholesale_price;
-                    amountData.quantity += item.quantity;
-                });
                 itemData = response.data as Item[];
             });
+        const countResponse = await supabase
+            .from("item")
+            .select("count", { count: "exact" })
+            .single();
+        totalItems = countResponse.count ?? 0;
     }
-    async function updateQuantity(id: number) {
+
+    async function calculateTotalAmount() {
+        amountData = {
+            totalSinglePrice: 0,
+            totalWholesalePrice: 0,
+            quantity: 0,
+            totalPurchasePrice: 0,
+        };
+        await supabase
+            .rpc("calculate_total_amount")
+            .single()
+            .then((response: any) => {
+                amountData = {
+                    totalSinglePrice: response.data.total_unit_sale_price,
+                    totalWholesalePrice: response.data.total_wholesale_price,
+                    quantity: response.data.total_quantity,
+                    totalPurchasePrice: response.data.total_purchase_price,
+                };
+            });
+    }
+    async function updateQuantity(id?: number) {
+        if (!id) return;
         await supabase
             .from("item")
             .update({
                 quantity: itemData.find((item) => item.id == id)?.quantity,
             })
             .eq("id", id);
+        getSales();
+    }
+
+    function nextPage() {
+        if (page * 10 > totalItems) return;
+        page++;
+        getSales();
+    }
+    function prevPage() {
+        if (page == 1) return;
+        page--;
         getSales();
     }
 </script>
@@ -97,22 +126,22 @@
         </div>
         <h1>
             کۆی گشتی نرخی کڕینی هەموكاڵاکان : <span
-                >{amountData.totalPurchasePrice.toLocaleString()}</span
+                >{amountData.totalPurchasePrice?.toLocaleString()}</span
             >
         </h1>
         <h1>
             کۆی گشتی نرخی فرۆشتنی هەموكاڵاکان بە تاک : <span
-                >{amountData.totalSinglePrice.toLocaleString()}</span
+                >{amountData.totalSinglePrice?.toLocaleString()}</span
             >
         </h1>
         <h1>
             کۆی گشتی نرخی فرۆشتنی هەموكاڵاکان بە کۆ : <span
-                >{amountData.totalWholesalePrice.toLocaleString()}</span
+                >{amountData.totalWholesalePrice?.toLocaleString()}</span
             >
         </h1>
         <h1>
             عددی هەموو کاڵاکان: <span
-                >{amountData.quantity.toLocaleString()}</span
+                >{amountData.quantity?.toLocaleString()}</span
             >
         </h1>
     </div>
@@ -156,4 +185,11 @@
             {/each}
         </TableBody>
     </Table>
+    <div class="mt-2 flex justify-end">
+        <h1>کۆی گشتی : {totalItems}</h1>
+    </div>
+    <div class="w-full my-4 flex justify-end">
+        <Button color="light" on:click={prevPage}><ChevronRight /></Button>
+        <Button color="light" on:click={nextPage}><ChevronLeft /></Button>
+    </div>
 </div>
